@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Verificación de credencial</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--tx:#1b2a3a;--mut:#5b6b7b;--ok:#1b7f4b;--bad:#b3261e;--gr:#6b7785;--ln:#d5dce4}
+@media(prefers-color-scheme:dark){:root{--bg:#10161d;--card:#18212b;--tx:#e8eef4;--mut:#9fb0c0;--ln:#2a3644}}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,Arial,sans-serif;padding:16px}
+main{max-width:640px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:20px;margin-bottom:14px}
+h1{font-size:1.25rem;margin:0 0 4px}
+.st{font-weight:700;font-size:1.3rem;padding:12px;border-radius:8px;color:#fff;text-align:center;margin-bottom:14px}
+.valid{background:var(--ok)}.revoked{background:var(--bad)}.none{background:var(--gr)}
+dl{margin:0}dt{color:var(--mut);font-size:.85rem;margin-top:10px}dd{margin:0;font-weight:600}
+table{width:100%;border-collapse:collapse;margin-top:8px}td,th{border-bottom:1px solid var(--ln);padding:6px;text-align:left;font-size:.95rem}
+small{color:var(--mut)}audio{width:100%;margin-top:8px}
+form{display:flex;gap:8px;flex-wrap:wrap}input{flex:1;min-width:200px;padding:10px;border:1px solid var(--ln);border-radius:8px;background:var(--card);color:var(--tx)}
+button{padding:10px 16px;border:0;border-radius:8px;background:#1f3a5f;color:#fff;font-weight:600}
+</style>
+</head>
+<body>
+<main>
+<div class="card"><h1>Verificación de credencial</h1><small>Introduce el ID impreso en el certificado.</small>
+<form id="f"><input id="q" placeholder="EPG-2026-C01-007-96" autocomplete="off"><button>Verificar</button></form></div>
+<div id="out"></div>
+<div class="card"><small>Esta credencial certifica el desempeño comunicativo evaluado por la academia emisora. No es un certificado oficial de nivel del MCER (CEFR) ni de un organismo examinador externo.</small></div>
+</main>
+<script>
+var out=document.getElementById('out');
+function check(base){var s=0;for(var i=0;i<base.length;i++)s+=base.charCodeAt(i);return ('0'+(s%97)).slice(-2)}
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
+function status(cls,txt){out.innerHTML='';out.appendChild(el('div','st '+cls,txt))}
+function row(dl,k,v){dl.appendChild(el('dt','',k));dl.appendChild(el('dd','',v))}
+function verify(id){
+  id=(id||'').trim().toUpperCase();
+  if(!/^[A-Z]{3}-\d{4}-C\d{2}-\d{3}-\d{2}$/.test(id)||check(id.slice(0,16))!==id.slice(17)){status('none','Identificador no válido');return}
+  fetch('credenciales.json',{cache:'no-store'}).then(function(r){return r.json()}).then(function(db){
+    var c=(db.credenciales||[]).filter(function(x){return x.id===id})[0];
+    if(!c){status('none','NO ENCONTRADA');return}
+    status(c.estado==='Revocada'?'revoked':'valid',c.estado==='Revocada'?'REVOCADA':'VÁLIDA');
+    var card=el('div','card'),dl=el('dl');
+    row(dl,'Titular',c.publico?c.titular:c.iniciales);
+    row(dl,'Programa',c.programa+' · cohorte '+c.cohorte+' · '+c.horas+' h');
+    row(dl,'Fecha de emisión',c.emision);
+    row(dl,'Emisor',db.emisor);
+    row(dl,'Referencia MCER',c.referencia);
+    card.appendChild(dl);
+    if(c.puntuaciones){var t=el('table');
+      Object.keys(c.puntuaciones).forEach(function(k){var tr=el('tr');tr.appendChild(el('td','',k));tr.appendChild(el('td','',c.puntuaciones[k]));t.appendChild(tr)});
+      card.appendChild(el('dt','','Puntuación por pilar (1–5)'));card.appendChild(t)}
+    if(c.badges&&c.badges.length){card.appendChild(el('dt','','Insignias'));c.badges.forEach(function(b){card.appendChild(el('dd','',b))})}
+    if(c.efset){card.appendChild(el('dt','','Resultado externo (EF SET)'));var a=el('a','','Ver resultado');a.href=c.efset;a.rel='noopener';card.appendChild(a)}
+    if(c.publico&&c.audio){card.appendChild(el('dt','','Evidencia de audio (60 s)'));var au=el('audio');au.controls=true;au.src=c.audio;card.appendChild(au)}
+    out.appendChild(card);
+  }).catch(function(){status('none','No se pudo consultar el registro')});
+}
+document.getElementById('f').onsubmit=function(e){e.preventDefault();var v=document.getElementById('q').value;history.replaceState(null,'','?id='+encodeURIComponent(v));verify(v)};
+var p=new URLSearchParams(location.search).get('id');if(p){document.getElementById('q').value=p;verify(p)}
+</script>
+</body>
+</html>
