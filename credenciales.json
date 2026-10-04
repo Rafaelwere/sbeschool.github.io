@@ -1,0 +1,31 @@
+{
+  "emisor": "Scaleup Business English School (SBES)",
+  "credenciales": [
+    {
+      "id": "EPG-2026-C01-007-96",
+      "estado": "Válida",
+      "publico": true,
+      "titular": "Ana Pérez (EJEMPLO)",
+      "iniciales": "A. P.",
+      "programa": "Programa Intensivo de Inglés de 8 Semanas",
+      "cohorte": "C01",
+      "horas": 28,
+      "emision": "2026-12-10",
+      "referencia": "B1+ con desempeño B2 en tareas ensayadas (certificación de desempeño de la academia)",
+      "puntuaciones": {
+        "Fluidez": 3.5,
+        "Precisión pragmática": 3.5,
+        "Riqueza léxica": 3.5,
+        "Pronunciación / inteligibilidad": 3.5,
+        "Resolución bajo presión": 4.0
+      },
+      "badges": [
+        "Navegante Profesional",
+        "Comunicador Resiliente",
+        "Profesional Integral"
+      ],
+      "efset": "",
+      "audio": ""
+    }
+  ]
+}
